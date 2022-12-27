@@ -6,6 +6,7 @@ class CustomTableViewCell: UITableViewCell {
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        contentView.backgroundColor = .white
     }
     
     required init?(coder: NSCoder) {
@@ -25,6 +26,7 @@ class CustomTableViewCell: UITableViewCell {
         label.font = UIFont(name: "Montserrat-SemiBold", size: 18)
         label.adjustsFontSizeToFitWidth = true
         label.textColor = .black
+        
         label.translatesAutoresizingMaskIntoConstraints = false
         label.lineBreakMode = .byWordWrapping
         return label

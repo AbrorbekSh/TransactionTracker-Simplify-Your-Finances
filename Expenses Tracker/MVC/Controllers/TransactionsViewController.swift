@@ -3,7 +3,11 @@ import CoreData
 
 final class TransactionsViewController: UIViewController {
     
-    let alert = CustomPopUp()
+    // MARK: - Properties
+    
+    private let alert = CustomPopUp()
+    private var bitcoinValue: Double? = nil
+    let service = NetworkingService()
     
     //MARK: - CoreData
     
@@ -13,9 +17,16 @@ final class TransactionsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
         
-        
+        DispatchQueue.global().async {
+            let value = self.service.fetchData()
+            DispatchQueue.main.async {
+                if let value = value {
+                    self.bitcoinValue = value
+                    self.bitcoinLabel.text = "Bitcoin:\n\(value)"
+                }
+            }
+        }
         
         let request : NSFetchRequest<Transaction> = Transaction.fetchRequest()
         do {
@@ -45,6 +56,7 @@ final class TransactionsViewController: UIViewController {
         addSubviews()
         configureTableView()
         configureButtons()
+        view.backgroundColor = .white
     }
 
     // MARK: - Private Methods
@@ -59,7 +71,7 @@ final class TransactionsViewController: UIViewController {
     }
     
     private func addSubviews(){
-        [transactionsTableView, addButton, balanceLabel, addTransactionButton, historyLabel].forEach{
+        [transactionsTableView, addButton, balanceLabel, addTransactionButton, historyLabel, bitcoinLabel].forEach{
             view.addSubview($0)
         }
     }
@@ -86,6 +98,7 @@ final class TransactionsViewController: UIViewController {
     }
     
     private func designCell(index: Int, cell: CustomTableViewCell){
+        cell.backgroundColor = .white
         cell.transactionAmountLabel.text = "\(TransactionsData.transactions[index].amount) $"
         cell.dateLabel.text = TransactionsData.transactions[index].date
         if let category = TransactionsData.transactions[index].category {
@@ -93,8 +106,6 @@ final class TransactionsViewController: UIViewController {
         } else {
             cell.categoryLabel.text = ""
         }
-        
-        cell.backgroundColor = .white
         cell.selectionStyle = .none
     }
     
@@ -125,10 +136,36 @@ final class TransactionsViewController: UIViewController {
             addButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
             addButton.heightAnchor.constraint(equalToConstant: 60),
             addButton.widthAnchor.constraint(equalToConstant: 60),
+            
+            bitcoinLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            bitcoinLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 40),
+            bitcoinLabel.heightAnchor.constraint(equalToConstant: 40),
+            bitcoinLabel.widthAnchor.constraint(equalToConstant: 80),
         ])
     }
     
     // MARK: - UI Elements
+    
+    private lazy var bitcoinLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        if let bitcoinValue = bitcoinValue {
+            label.text = "Bitcoin:\n\(bitcoinValue)"
+        } else {
+            label.text = "Bitcoin:\nLoading..."
+        }
+        label.font = UIFont(name: "Montserrat-Medium", size: 14)
+        label.adjustsFontSizeToFitWidth = true
+        label.textColor = .systemGray
+        
+        label.backgroundColor = .clear
+        label.textAlignment = .center
+        
+        label.numberOfLines = 2
+        
+        return label
+    }()
     
     private let  historyLabel: UILabel = {
         let label = UILabel()
@@ -220,9 +257,14 @@ final class TransactionsViewController: UIViewController {
 extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate{
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
         let index = TransactionsData.transactions.count - indexPath.row - 1
+        let toRemove = TransactionsData.transactions[index].amount
+        
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") {
             (action, sourceView, completionHandler) in
+            TransactionsData.currentBalance = TransactionsData.currentBalance - Int(toRemove)
+            self.balanceLabel.text = "\(TransactionsData.currentBalance) $"
             self.context.delete(TransactionsData.transactions[index])
             TransactionsData.transactions.remove(at: index)
             tableView.deleteRows(at: [indexPath], with: .fade)
@@ -257,7 +299,6 @@ extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate
         else {
             return UITableViewCell()
         }
-        
         let index = TransactionsData.transactions.count - indexPath.row - 1
         designCell(index: index, cell: cell)
         return cell
@@ -266,7 +307,6 @@ extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate
 
 extension TransactionsViewController: UpdateTableViewProtocol {
     func updateTableView() {
-//        sumTheBalance()
         transactionsTableView.reloadData()
     }
 }
