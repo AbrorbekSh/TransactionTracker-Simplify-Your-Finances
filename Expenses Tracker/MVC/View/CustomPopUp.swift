@@ -63,7 +63,7 @@ class CustomPopUp: NSObject {
         okButton.layer.borderWidth = 3
         okButton.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.8).cgColor
         
-        okButton.addTarget(self, action: #selector(yesPressed), for: .touchUpInside)
+        okButton.addTarget(self, action: #selector(okPressed), for: .touchUpInside)
         
         let cancelButton = UIButton(frame: CGRect(x: (alertView.frame.size.width - 310)/2 + okButton.frame.size.width + 20,
                                                y: (alertView.frame.size.height-76),
@@ -77,19 +77,21 @@ class CustomPopUp: NSObject {
         cancelButton.layer.borderWidth = 3
         cancelButton.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.8).cgColor
         
-        cancelButton.addTarget(self, action: #selector(yesPressed), for: .touchUpInside)
+        cancelButton.addTarget(self, action: #selector(cancelPressed), for: .touchUpInside)
         
         let textField = UITextField(frame: CGRect(x: (alertView.frame.size.width - 250)/2,
                                                   y: (alertView.frame.size.height - 80)/2 - 10,
                                                   width: 250,
                                                   height: 80))
         textField.textColor = .black
+        
         textField.attributedPlaceholder = NSAttributedString(
             string: "Enter the amount",
             attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
         )
+        
         textField.font = UIFont(name: "Montserrat-SemiBold", size: 25)
-        textField.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
+        textField.backgroundColor = UIColor(hexString: "#89CFEF")
         textField.layer.cornerRadius = 4
         textField.keyboardType = .numberPad
         textField.textAlignment = .center
@@ -106,35 +108,41 @@ class CustomPopUp: NSObject {
         })
     }
     
-    @objc func yesPressed(){
+    @objc func okPressed(){
         
         if addedAmount != 0{
             
             let newTransaction = Transaction(context: context)
             
             let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .short
-            dateFormatter.timeStyle = .medium
+            dateFormatter.dateStyle = .medium
+            dateFormatter.timeStyle = .short
             let present = Date()
             
             newTransaction.date = dateFormatter.string(from: present)
             newTransaction.category = nil
-            newTransaction.amount = Int32(-addedAmount)
+            newTransaction.amount = Int32(addedAmount)
             do{
                 try context.save()
             } catch {
                 print("Error with \(error)")
             }
-            Transactions.transactions.append(newTransaction)
+            TransactionsData.transactions.append(newTransaction)
             
-            controller.currentBalance = controller.currentBalance + addedAmount
-            controller.balanceLabel.text = " \(controller.currentBalance) $"
+            TransactionsData.currentBalance = TransactionsData.currentBalance + addedAmount
+            controller.balanceLabel.text = " \(TransactionsData.currentBalance) $"
             controller.transactionsTableView.reloadData()
             addedAmount = 0
             
             self.alertView.removeFromSuperview()
             self.backgroundView.removeFromSuperview()
         }
+    }
+    
+    @objc private func cancelPressed(){
+        addedAmount = 0
+        self.alertView.removeFromSuperview()
+        self.backgroundView.removeFromSuperview()
     }
 }
 
@@ -162,6 +170,7 @@ extension CustomPopUp: UITextFieldDelegate {
             
             return true
     }
+    
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.text = ""

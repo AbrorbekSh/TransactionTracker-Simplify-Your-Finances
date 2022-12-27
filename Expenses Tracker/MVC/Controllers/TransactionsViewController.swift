@@ -1,13 +1,9 @@
 import UIKit
 import CoreData
 
-class Transactions{
-    static var transactions: [Transaction] = []
-}
-
 final class TransactionsViewController: UIViewController {
     
-    var currentBalance = 0
+    let alert = CustomPopUp()
     
     //MARK: - CoreData
     
@@ -23,7 +19,7 @@ final class TransactionsViewController: UIViewController {
         
         let request : NSFetchRequest<Transaction> = Transaction.fetchRequest()
         do {
-            Transactions.transactions = try context.fetch(request)
+            TransactionsData.transactions = try context.fetch(request)
         } catch {
             print("Error fetching data from context \(error)")
         }
@@ -57,13 +53,9 @@ final class TransactionsViewController: UIViewController {
         addButton.addTarget(self, action: #selector(addButtonPressed), for: .touchUpInside)
         addTransactionButton.addTarget(self, action: #selector(addTransaction), for: .touchUpInside)
     }
-    let alert = CustomPopUp()
+    
     @objc private func addButtonPressed(){
         alert.showAlert(on: self)
-    }
-    
-    @objc private func yesButtonPressed(){
-        alert.yesPressed()
     }
     
     private func addSubviews(){
@@ -87,10 +79,23 @@ final class TransactionsViewController: UIViewController {
     }
     
     private func sumTheBalance(){
-        currentBalance = 0
-        for transaction in Transactions.transactions {
-            currentBalance = currentBalance + Int(transaction.amount)
+        TransactionsData.currentBalance = 0
+        for transaction in TransactionsData.transactions {
+            TransactionsData.currentBalance = TransactionsData.currentBalance + Int(transaction.amount)
         }
+    }
+    
+    private func designCell(index: Int, cell: CustomTableViewCell){
+        cell.transactionAmountLabel.text = "\(TransactionsData.transactions[index].amount) $"
+        cell.dateLabel.text = TransactionsData.transactions[index].date
+        if let category = TransactionsData.transactions[index].category {
+            cell.categoryLabel.text = category
+        } else {
+            cell.categoryLabel.text = ""
+        }
+        
+        cell.backgroundColor = .white
+        cell.selectionStyle = .none
     }
     
     private func activateLayout(){
@@ -173,7 +178,7 @@ final class TransactionsViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
 
-        label.text = "\(currentBalance) $"
+        label.text = "\(TransactionsData.currentBalance) $"
         label.font = UIFont(name: "Montserrat-Bold", size: 25)
         label.textColor = .black
 
@@ -215,10 +220,11 @@ final class TransactionsViewController: UIViewController {
 extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate{
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "Удалить") {
+        let index = TransactionsData.transactions.count - indexPath.row - 1
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") {
             (action, sourceView, completionHandler) in
-            self.context.delete(Transactions.transactions[indexPath.row])
-            Transactions.transactions.remove(at: indexPath.row)
+            self.context.delete(TransactionsData.transactions[index])
+            TransactionsData.transactions.remove(at: index)
             tableView.deleteRows(at: [indexPath], with: .fade)
             do{
                 try self.context.save()
@@ -230,13 +236,12 @@ extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate
         deleteAction.image = UIImage(systemName: "trash")
         
         let swipeConfiguration = UISwipeActionsConfiguration(actions: [ deleteAction])
-        // Delete should not delete automatically
         swipeConfiguration.performsFirstActionWithFullSwipe = false
         return swipeConfiguration
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return Transactions.transactions.count
+        return TransactionsData.transactions.count
     }
     
 
@@ -246,13 +251,15 @@ extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: CustomTableViewCell.identifier, for: indexPath) as?     CustomTableViewCell else {
-                return UITableViewCell()
-            }
-        cell.transactionAmountLabel.text = "\(Transactions.transactions[indexPath.row].amount) $"
-        cell.backgroundColor = .white
-        cell.layer.cornerRadius = cell.frame.height/4.0
-        cell.selectionStyle = .none
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: CustomTableViewCell.identifier,
+            for: indexPath) as?     CustomTableViewCell
+        else {
+            return UITableViewCell()
+        }
+        
+        let index = TransactionsData.transactions.count - indexPath.row - 1
+        designCell(index: index, cell: cell)
         return cell
     }
 }

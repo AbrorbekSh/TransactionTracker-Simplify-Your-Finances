@@ -30,10 +30,34 @@ class CustomTableViewCell: UITableViewCell {
         return label
     }()
     
+    let categoryLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont(name: "Montserrat-Medium", size: 15)
+        label.adjustsFontSizeToFitWidth = true
+        label.textColor = .black
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.lineBreakMode = .byWordWrapping
+        return label
+    }()
+    
+    let dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont(name: "Montserrat-Medium", size: 15)
+        label.adjustsFontSizeToFitWidth = true
+        label.textColor = .black
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.lineBreakMode = .byWordWrapping
+        return label
+    }()
+    
+    
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         contentView.addSubview(newView)
         contentView.addSubview(transactionAmountLabel)
+        contentView.addSubview(categoryLabel)
+        contentView.addSubview(dateLabel)
         newView.clipsToBounds = false
         let size = 15
         let gradient = makeGradient()
@@ -48,7 +72,6 @@ class CustomTableViewCell: UITableViewCell {
     
     private func makeGradient() -> CAGradientLayer{
         let gradient = CAGradientLayer()
-//        #ee9ca7 → #ffdde1 Pink gradient
         gradient.frame = newView.bounds
         let color1 = UIColor(hexString: "#2193b0")
         let color2 = UIColor(hexString: "#6dd5ed")
@@ -64,12 +87,23 @@ class CustomTableViewCell: UITableViewCell {
         NSLayoutConstraint.activate([
             newView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 2.5),
             newView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -2.5),
-            newView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            newView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            newView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            newView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             
             transactionAmountLabel.centerYAnchor.constraint(equalTo: newView.centerYAnchor),
-            transactionAmountLabel.leadingAnchor.constraint(equalTo: newView.leadingAnchor, constant: 20),
-            transactionAmountLabel.widthAnchor.constraint(equalToConstant: newView.frame.width-40),
+            transactionAmountLabel.leadingAnchor.constraint(equalTo: newView.leadingAnchor, constant: 10),
+            transactionAmountLabel.widthAnchor.constraint(equalToConstant: newView.frame.width/3-10),
+            transactionAmountLabel.heightAnchor.constraint(equalTo: newView.heightAnchor),
+            
+            categoryLabel.centerXAnchor.constraint(equalTo: newView.centerXAnchor),
+            categoryLabel.centerYAnchor.constraint(equalTo: newView.centerYAnchor),
+            categoryLabel.widthAnchor.constraint(equalToConstant: newView.frame.width/3-10),
+            categoryLabel.heightAnchor.constraint(equalTo: newView.heightAnchor),
+
+            dateLabel.trailingAnchor.constraint(equalTo: newView.trailingAnchor, constant: -10),
+            dateLabel.centerYAnchor.constraint(equalTo: newView.centerYAnchor),
+            dateLabel.widthAnchor.constraint(equalToConstant: newView.frame.width/3-10),
+            dateLabel.heightAnchor.constraint(equalTo: newView.heightAnchor),
         ])
     }
 }

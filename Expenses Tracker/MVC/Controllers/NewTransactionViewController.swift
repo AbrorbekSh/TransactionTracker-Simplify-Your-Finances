@@ -8,8 +8,7 @@ protocol UpdateTableViewProtocol: AnyObject{
 final class NewTransactionViewController: UIViewController {
     
     // MARK: - Properties
-    
-    var currentBalance = 0
+    private var category: String? = nil
     
     weak var delegate: UpdateTableViewProtocol?
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -33,7 +32,7 @@ final class NewTransactionViewController: UIViewController {
     private func setupView() {
         addSubviews()
         configureNavBar()
-//        configureTextFields()
+        configureTextFields()
         configureButtons()
         
         activateLayout()
@@ -44,9 +43,10 @@ final class NewTransactionViewController: UIViewController {
     // MARK: - Private Methods
     
     private func addSubviews() {
-        view.addSubview(attitudeLabel)
+        view.addSubview(categoryLabel)
         view.addSubview(counterTextField)
-        view.addSubview(readyButton)
+        view.addSubview(categorySegmentationControl)
+        view.addSubview(addTransactionButton)
     }
     
     private func configureNavBar(){
@@ -57,49 +57,91 @@ final class NewTransactionViewController: UIViewController {
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: image, style: .done, target: self, action: #selector(dismissButton))
     }
     
-//    private func configureTextFields() {
-//        attitudeTextView.delegate = self
-//        headerTextField.delegate = self
-//        counterTextField.delegate = self
-//    }
+    private func configureTextFields() {
+        counterTextField.delegate = self
+    }
     
     private func configureButtons() {
-        readyButton.addTarget(self, action: #selector(readyButtonPressed), for: .touchUpInside)
+        addTransactionButton.addTarget(self, action: #selector(readyButtonPressed), for: .touchUpInside)
+        categorySegmentationControl.addTarget(self, action: #selector(segmentDidChange(_:)), for: .valueChanged)
     }
     
     private func activateLayout(){
         NSLayoutConstraint.activate([
             
-            attitudeLabel.topAnchor.constraint(equalTo: view.bottomAnchor, constant: 30),
-            attitudeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            attitudeLabel.heightAnchor.constraint(equalToConstant: 56),
-            attitudeLabel.widthAnchor.constraint(equalTo: view.widthAnchor, constant: 60),
+            categoryLabel.topAnchor.constraint(equalTo: counterTextField.bottomAnchor, constant: 20),
+            categoryLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            categoryLabel.heightAnchor.constraint(equalToConstant: 60),
             
-            counterTextField.topAnchor.constraint(equalTo: view.bottomAnchor, constant: 40),
-            counterTextField.leadingAnchor.constraint(equalTo: view.trailingAnchor, constant: 10),
-            counterTextField.heightAnchor.constraint(equalToConstant: 40),
-            counterTextField.widthAnchor.constraint(equalToConstant: 60),
+            counterTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 110),
+            counterTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
+            counterTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
+            counterTextField.heightAnchor.constraint(equalToConstant: 120),
             
-            readyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            readyButton.bottomAnchor.constraint(equalTo: counterTextField.bottomAnchor, constant: view.bounds.size.height/6.5),
-            readyButton.heightAnchor.constraint(equalToConstant: 65),
-            readyButton.widthAnchor.constraint(equalToConstant: 160)
+            categorySegmentationControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            categorySegmentationControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            categorySegmentationControl.topAnchor.constraint(equalTo: categoryLabel.bottomAnchor, constant: 20),
+            
+            categorySegmentationControl.heightAnchor.constraint(equalToConstant: 60),
+            
+            addTransactionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            addTransactionButton.topAnchor.constraint(equalTo: categorySegmentationControl.bottomAnchor, constant: 30),
+            addTransactionButton.heightAnchor.constraint(equalToConstant: 70),
+            addTransactionButton.widthAnchor.constraint(equalToConstant: 200)
         ])
     }
     
+    @objc private func segmentDidChange(_ segmentationControl: UISegmentedControl){
+        switch segmentationControl.selectedSegmentIndex {
+        case 0:
+            category = "groceries"
+        case 1:
+            category = "taxi"
+        case 2:
+            category = "electronics"
+        case 3:
+            category = "restaurant"
+        case 4:
+            category = "other"
+        default:
+            category = nil
+        }
+    }
+    
     @objc private func readyButtonPressed(){
+        if category == nil {
+            categorySegmentationControl.layer.borderColor = UIColor.systemRed.cgColor
+            categorySegmentationControl.layer.borderWidth = 2
+        } else {
+            categorySegmentationControl.layer.borderWidth = 0
+        }
+        
+        if counterTextField.text == "" {
+            counterTextField.layer.borderColor = UIColor.systemRed.cgColor
+            counterTextField.layer.borderWidth = 2
+        } else {
+            counterTextField.layer.borderWidth = 0
+        }
 
-        if  counterTextField.text != "" {
-//            let newAttitude = Attitude(context: context)
-//            newAttitude.attitude = attitudeTextView.text!
-//            do{
-//                try context.save()
-//            } catch {
-//                print("Error with \(error)")
-//            }
-//            Attitudes.attitudes.append(newAttitude)
-//            delegate?.updateTableView()
-//            dismiss(animated: true)
+        if  counterTextField.text != "" && category != nil {
+            let newTransaction = Transaction(context: context)
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            dateFormatter.timeStyle = .short
+            let present = Date()
+            
+            newTransaction.date = dateFormatter.string(from: present)
+            newTransaction.category = category
+            newTransaction.amount = Int32(-Int(counterTextField.text!)!)
+            do{
+                try context.save()
+            } catch {
+                print("Error with \(error)")
+            }
+            TransactionsData.transactions.append(newTransaction)
+            delegate?.updateTableView()
+            dismiss(animated: true)
         }
         
     }
@@ -110,14 +152,25 @@ final class NewTransactionViewController: UIViewController {
     
     // MARK: - UI Elements
     
+    private let categorySegmentationControl: UISegmentedControl = {
+        let items = ["grocceries", "taxi", "electronics", "restaurant", "other"]
+        
+        let segment = UISegmentedControl(items: items)
+        segment.translatesAutoresizingMaskIntoConstraints = false
+        
+        segment.selectedSegmentTintColor = UIColor.systemBlue.withAlphaComponent(0.8)
+        segment.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
+        
+        return segment
+    }()
 
     
-    private let attitudeLabel: UILabel = {
+    private let categoryLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         
         label.text = "Category"
-        label.font = UIFont(name: "Montserrat-Medium", size: 22)
+        label.font = UIFont(name: "Montserrat-SemiBold", size: 23)
         label.textColor = .black
         
         return label
@@ -125,28 +178,29 @@ final class NewTransactionViewController: UIViewController {
     
     
     private let counterTextField: UITextField = {
-        let text = UITextField()
-        text.translatesAutoresizingMaskIntoConstraints = false
-
-        text.textColor = .black
-        text.attributedPlaceholder = NSAttributedString(
-            string: "100",
+        let textField = UITextField()
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        
+        textField.textColor = .black
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Enter the amount",
             attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
         )
-        text.font = UIFont(name: "Montserrat-Regular", size: 25)
-        text.backgroundColor = UIColor(hexString: "f4f4f4")
-        text.layer.cornerRadius = 4
-        text.keyboardType = .numberPad
-        text.textAlignment = .center
+        textField.font = UIFont(name: "Montserrat-Bold", size: 25)
+        textField.adjustsFontSizeToFitWidth = true
+        textField.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
+        textField.layer.cornerRadius = 4
+        textField.keyboardType = .numberPad
+        textField.textAlignment = .center
         
-        return text
+        return textField
     }()
     
-    private let readyButton: UIButton = {
+    private let addTransactionButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        button.setTitle("Add", for: .normal)
+        button.setTitle("Add transaction", for: .normal)
         button.layer.cornerRadius = 15
         button.titleLabel?.font = UIFont(name: "Montserrat-Bold", size: 20)
         button.backgroundColor = .systemBlue
@@ -157,37 +211,28 @@ final class NewTransactionViewController: UIViewController {
     
 }
 
-//// MARK: - UITextFieldDelegate
-//extension NewTransactionViewController: UITextFieldDelegate {
-//
-//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//
-//        if counterTextField.isFirstResponder {
-//            if textField.text?.count == 0 && string == "0" {
-//                return false
-//            }
-//
-//            if ((textField.text!) + string).count > 3 {
-//                return false
-//            }
-//
-//            let allowedCharacterSet = CharacterSet.init(charactersIn: "0123456789.")
-//            let textCharacterSet = CharacterSet.init(charactersIn: textField.text! + string)
-//
-//            if !allowedCharacterSet.isSuperset(of: textCharacterSet) {
-//                return false
-//            }
-//
-//            return true
-//        } else if headerTextField.isFirstResponder {
-//            let maxLength = 40
-//            let currentString = (textField.text ?? "") as NSString
-//            let newString = currentString.replacingCharacters(in: range, with: string)
-//
-//            return newString.count <= maxLength
-//        }
-//
-//        return true
-//    }
-//
-//}
+// MARK: - UITextFieldDelegate
+extension NewTransactionViewController: UITextFieldDelegate {
+
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        
+        let currentString = textField.text ?? ""
+
+            if currentString.count == 0 && string == "0" {
+                return false
+            }
+
+            if (currentString + string).count > 7 {
+                return false
+            }
+
+            let allowedCharacterSet = CharacterSet.init(charactersIn: "0123456789")
+            let textCharacterSet = CharacterSet.init(charactersIn: currentString + string)
+
+            if !allowedCharacterSet.isSuperset(of: textCharacterSet) {
+                return false
+            }
+
+            return true
+    }
+}
