@@ -7,11 +7,20 @@ protocol UpdateTableViewProtocol: AnyObject{
 
 final class NewTransactionViewController: UIViewController {
     
-    // MARK: - Properties
-    private var category: String? = nil
+    // MARK: - Constants
+    
+    private enum Constants {
+        static let horizontalMargin: CGFloat = 20
+        static let addTransactionButtonWidth: CGFloat = 200
+        static let addTransactionButtonHeight: CGFloat = 70
+        static let categoryLabelHeight: CGFloat = 60
+        static let amountTextFieldHeight: CGFloat = 120
+        static let categorySegmentationControlHeight: CGFloat = 90
+    }
+    
+    // MARK: - Delegates
     
     weak var delegate: UpdateTableViewProtocol?
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     // MARK: - Lifecycle
     
@@ -27,11 +36,11 @@ final class NewTransactionViewController: UIViewController {
         view.endEditing(true)
     }
     
-    // MARK: - Layout
+    // MARK: - Layout related methods
     
     private func setupView() {
         addSubviews()
-        configureNavBar()
+        configureNavigationBar()
         configureTextFields()
         configureButtons()
         
@@ -40,25 +49,15 @@ final class NewTransactionViewController: UIViewController {
         view.backgroundColor = .white
     }
     
-    // MARK: - Private Methods
-    
     private func addSubviews() {
         view.addSubview(categoryLabel)
-        view.addSubview(counterTextField)
+        view.addSubview(amountTextField)
         view.addSubview(categorySegmentationControl)
         view.addSubview(addTransactionButton)
     }
     
-    private func configureNavBar(){
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.font: UIFont(name: "Montserrat-SemiBold", size: 25)!, NSAttributedString.Key.foregroundColor: UIColor.black]
-        title = "New transaction"
-        
-        let image = UIImage(systemName: "xmark")?.withTintColor(.black, renderingMode: .alwaysOriginal)
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: image, style: .done, target: self, action: #selector(dismissButton))
-    }
-    
     private func configureTextFields() {
-        counterTextField.delegate = self
+        amountTextField.delegate = self
     }
     
     private func configureButtons() {
@@ -66,87 +65,94 @@ final class NewTransactionViewController: UIViewController {
         categorySegmentationControl.addTarget(self, action: #selector(segmentDidChange(_:)), for: .valueChanged)
     }
     
+    private func configureNavigationBar(){
+        navigationController?.navigationBar.titleTextAttributes = [
+            NSAttributedString.Key.font: UIFont.customFont(type: .semibold, size: 25),
+            NSAttributedString.Key.foregroundColor: UIColor.black]
+        title = "New transaction"
+        
+        let image = UIImage(systemName: "xmark")?.withTintColor(.black, renderingMode: .alwaysOriginal)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: image, style: .done, target: self, action: #selector(dismissButton))
+    }
+    
     private func activateLayout(){
         NSLayoutConstraint.activate([
             
-            categoryLabel.topAnchor.constraint(equalTo: counterTextField.bottomAnchor, constant: 20),
+            categoryLabel.topAnchor.constraint(equalTo: amountTextField.bottomAnchor, constant: 20),
             categoryLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            categoryLabel.heightAnchor.constraint(equalToConstant: 60),
+            categoryLabel.heightAnchor.constraint(equalToConstant: Constants.categoryLabelHeight),
             
-            counterTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 110),
-            counterTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
-            counterTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
-            counterTextField.heightAnchor.constraint(equalToConstant: 120),
+            amountTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 110),
+            amountTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
+            amountTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
+            amountTextField.heightAnchor.constraint(equalToConstant: Constants.amountTextFieldHeight),
             
             categorySegmentationControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             categorySegmentationControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             categorySegmentationControl.topAnchor.constraint(equalTo: categoryLabel.bottomAnchor, constant: 20),
             
-            categorySegmentationControl.heightAnchor.constraint(equalToConstant: 60),
+            categorySegmentationControl.heightAnchor.constraint(equalToConstant: Constants.categorySegmentationControlHeight),
             
             addTransactionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             addTransactionButton.topAnchor.constraint(equalTo: categorySegmentationControl.bottomAnchor, constant: 30),
-            addTransactionButton.heightAnchor.constraint(equalToConstant: 70),
-            addTransactionButton.widthAnchor.constraint(equalToConstant: 200)
+            addTransactionButton.heightAnchor.constraint(equalToConstant: Constants.addTransactionButtonHeight),
+            addTransactionButton.widthAnchor.constraint(equalToConstant: Constants.addTransactionButtonWidth)
         ])
     }
     
-    @objc private func segmentDidChange(_ segmentationControl: UISegmentedControl){
-        switch segmentationControl.selectedSegmentIndex {
-        case 0:
-            category = "groceries"
-        case 1:
-            category = "taxi"
-        case 2:
-            category = "electronics"
-        case 3:
-            category = "restaurant"
-        case 4:
-            category = "other"
-        default:
-            category = nil
-        }
-    }
+    //MARK: - Private Methods
     
-    @objc private func readyButtonPressed(){
-        if category == nil {
+    private func checkUserInput(){
+        if Category.category == nil {
             categorySegmentationControl.layer.borderColor = UIColor.systemRed.cgColor
             categorySegmentationControl.layer.borderWidth = 2
         } else {
             categorySegmentationControl.layer.borderWidth = 0
         }
         
-        if counterTextField.text == "" {
-            counterTextField.layer.borderColor = UIColor.systemRed.cgColor
-            counterTextField.layer.borderWidth = 2
+        if amountTextField.text == "" {
+            amountTextField.layer.borderColor = UIColor.systemRed.cgColor
+            amountTextField.layer.borderWidth = 2
         } else {
-            counterTextField.layer.borderWidth = 0
+            amountTextField.layer.borderWidth = 0
         }
-
-        if  counterTextField.text != "" && category != nil {
-            let newTransaction = Transaction(context: context)
+    }
+    
+    //MARK: - ObjectiveC methods
+    
+    @objc private func segmentDidChange(_ segmentationControl: UISegmentedControl){
+        switch segmentationControl.selectedSegmentIndex {
+        case 0:
+            Category.category = "groceries"
+        case 1:
+            Category.category = "taxi"
+        case 2:
+            Category.category = "electronics"
+        case 3:
+            Category.category = "restaurant"
+        case 4:
+            Category.category = "other"
+        default:
+            Category.category = nil
+        }
+    }
+    
+    @objc private func readyButtonPressed(){
+        checkUserInput()
+        
+        if  amountTextField.text != "" && Category.category != nil {
             
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .medium
-            dateFormatter.timeStyle = .short
-            let present = Date()
-            
-            newTransaction.date = dateFormatter.string(from: present)
-            newTransaction.category = category
-            newTransaction.amount = Int32(-Int(counterTextField.text!)!)
-            do{
-                try context.save()
-            } catch {
-                print("Error with \(error)")
+            if let amount = amountTextField.text {
+                CoreDataService.createNewTransaction(amount: -Int32(Int(amount)!))
             }
-            TransactionsData.transactions.append(newTransaction)
+            Category.category = nil
             delegate?.updateTableView()
             dismiss(animated: true)
         }
-        
     }
     
     @objc private func dismissButton(){
+        Category.category = nil
         dismiss(animated: true)
     }
     
@@ -170,14 +176,14 @@ final class NewTransactionViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         
         label.text = "Category"
-        label.font = UIFont(name: "Montserrat-SemiBold", size: 23)
+        label.font = UIFont.customFont(type: .semibold, size: 23)
         label.textColor = .black
         
         return label
     }()
     
     
-    private let counterTextField: UITextField = {
+    private let amountTextField: UITextField = {
         let textField = UITextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
         
@@ -186,7 +192,7 @@ final class NewTransactionViewController: UIViewController {
             string: "Enter the amount",
             attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
         )
-        textField.font = UIFont(name: "Montserrat-Bold", size: 25)
+        textField.font = UIFont.customFont(type: .bold, size: 25)
         textField.adjustsFontSizeToFitWidth = true
         textField.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
         textField.layer.cornerRadius = 4
@@ -202,7 +208,7 @@ final class NewTransactionViewController: UIViewController {
         
         button.setTitle("Add transaction", for: .normal)
         button.layer.cornerRadius = 15
-        button.titleLabel?.font = UIFont(name: "Montserrat-Bold", size: 20)
+        button.titleLabel?.font = UIFont.customFont(type: .bold, size: 20)
         button.backgroundColor = .systemBlue
         button.tintColor = .white
         

@@ -2,9 +2,9 @@
 import UIKit
 
 class NetworkingService {
-    private let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
+    static private let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     
-    func fetchData() -> Double? {
+    static func fetchData() -> Double? {
         var double: Double? = nil
         
         let group = DispatchGroup()
@@ -36,14 +36,3 @@ class NetworkingService {
     }
 }
 
-struct Response: Codable {
-    let bpi: Values
-}
-
-struct Values: Codable {
-    let USD: Description
-}
-
-struct Description: Codable {
-    let rate_float: Double
-}

@@ -1,6 +1,15 @@
 import UIKit
 
-class CustomTableViewCell: UITableViewCell {
+final class CustomTableViewCell: UITableViewCell {
+    
+    // MARK: - Constants
+    
+    private enum Constants {
+        static let horizontalMargin: CGFloat = 2.5
+        static let verticalMargin: CGFloat = 2.5
+    }
+    
+    //MARK: - Init
     
     static let identifier = String(describing: CustomTableViewCell.self)
 
@@ -13,7 +22,11 @@ class CustomTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-
+    override func awakeFromNib() {
+        super.awakeFromNib()
+    }
+    
+    //MARK: - UI elements
     private let newView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -23,7 +36,7 @@ class CustomTableViewCell: UITableViewCell {
     
     let transactionAmountLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont(name: "Montserrat-SemiBold", size: 18)
+        label.font = UIFont.customFont(type: .semibold, size: 18)
         label.adjustsFontSizeToFitWidth = true
         label.textColor = .black
         
@@ -34,7 +47,7 @@ class CustomTableViewCell: UITableViewCell {
     
     let categoryLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont(name: "Montserrat-Medium", size: 15)
+        label.font = UIFont.customFont(type: .medium, size: 15)
         label.adjustsFontSizeToFitWidth = true
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -44,7 +57,7 @@ class CustomTableViewCell: UITableViewCell {
     
     let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont(name: "Montserrat-Medium", size: 15)
+        label.font = UIFont.customFont(type: .medium, size: 15)
         label.adjustsFontSizeToFitWidth = true
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -52,24 +65,26 @@ class CustomTableViewCell: UITableViewCell {
         return label
     }()
     
-    
-    
     override func layoutSubviews() {
         super.layoutSubviews()
+        addSubviews()
+        giveGradientToView()
+        activateLayout()
+    }
+    
+    //MARK: - Private methods
+    
+    private func addSubviews(){
         contentView.addSubview(newView)
         contentView.addSubview(transactionAmountLabel)
         contentView.addSubview(categoryLabel)
         contentView.addSubview(dateLabel)
-        newView.clipsToBounds = false
-        let size = 15
-        let gradient = makeGradient()
-        newView.layer.addSublayer(gradient)
-        newView.layer.cornerRadius = CGFloat(size)
-        activateLayout()
     }
     
-    override func awakeFromNib() {
-        super.awakeFromNib()
+    private func giveGradientToView(){
+        let gradient = makeGradient()
+        newView.layer.addSublayer(gradient)
+        newView.layer.cornerRadius = 15
     }
     
     private func makeGradient() -> CAGradientLayer{
@@ -87,10 +102,10 @@ class CustomTableViewCell: UITableViewCell {
     
     private func activateLayout(){
         NSLayoutConstraint.activate([
-            newView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 2.5),
-            newView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -2.5),
-            newView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            newView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            newView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Constants.verticalMargin),
+            newView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Constants.verticalMargin),
+            newView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Constants.horizontalMargin),
+            newView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.horizontalMargin),
             
             transactionAmountLabel.centerYAnchor.constraint(equalTo: newView.centerYAnchor),
             transactionAmountLabel.leadingAnchor.constraint(equalTo: newView.leadingAnchor, constant: 10),

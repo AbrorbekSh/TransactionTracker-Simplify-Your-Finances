@@ -1,9 +1,10 @@
+// To be implemented in the future :)
 
-import UIKit
-
-class DateContainer {
-    static var date: DateForBitcoin? = nil
-}
+//import UIKit
+//
+//class DateContainer {
+//    static var date: DateForBitcoin? = nil
+//}
 
 //DispatchQueue.global().async {
 //    let request : NSFetchRequest<DateForBitcoin> = DateForBitcoin.fetchRequest()

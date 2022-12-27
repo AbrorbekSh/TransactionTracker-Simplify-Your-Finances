@@ -10,6 +10,12 @@
 		21202567295AC2A1000BEFAA /* TransacationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21202566295AC2A1000BEFAA /* TransacationData.swift */; };
 		21C955CF295B0C9A0044B92E /* DateExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C955CE295B0C9A0044B92E /* DateExtension.swift */; };
 		21C955D1295B0FEC0044B92E /* DateContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C955D0295B0FEC0044B92E /* DateContainer.swift */; };
+		21E5A6B4295B47D700CFAC92 /* BitcoinData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E5A6B3295B47D700CFAC92 /* BitcoinData.swift */; };
+		21E5A6B6295B495B00CFAC92 /* CoreDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E5A6B5295B495A00CFAC92 /* CoreDataService.swift */; };
+		21E5A6B9295B4F2500CFAC92 /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E5A6B8295B4F2500CFAC92 /* Network.swift */; };
+		21E5A6BB295B555B00CFAC92 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E5A6BA295B555B00CFAC92 /* Category.swift */; };
+		21E5A6BD295B641B00CFAC92 /* AddedAmount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E5A6BC295B641B00CFAC92 /* AddedAmount.swift */; };
+		21E5A6BF295B743B00CFAC92 /* FontExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E5A6BE295B743B00CFAC92 /* FontExtension.swift */; };
 		21F6DE3B2959A8F40018AED5 /* DataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 21F6DE392959A8F40018AED5 /* DataModel.xcdatamodeld */; };
 		21F6DE532959E5E00018AED5 /* CustomCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F6DE522959E5E00018AED5 /* CustomCell.swift */; };
 		21F6DE552959E6090018AED5 /* CustomPopUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F6DE542959E6090018AED5 /* CustomPopUp.swift */; };
@@ -32,6 +38,12 @@
 		21202566295AC2A1000BEFAA /* TransacationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransacationData.swift; sourceTree = "<group>"; };
 		21C955CE295B0C9A0044B92E /* DateExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateExtension.swift; sourceTree = "<group>"; };
 		21C955D0295B0FEC0044B92E /* DateContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateContainer.swift; sourceTree = "<group>"; };
+		21E5A6B3295B47D700CFAC92 /* BitcoinData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinData.swift; sourceTree = "<group>"; };
+		21E5A6B5295B495A00CFAC92 /* CoreDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataService.swift; sourceTree = "<group>"; };
+		21E5A6B8295B4F2500CFAC92 /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
+		21E5A6BA295B555B00CFAC92 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
+		21E5A6BC295B641B00CFAC92 /* AddedAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddedAmount.swift; sourceTree = "<group>"; };
+		21E5A6BE295B743B00CFAC92 /* FontExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontExtension.swift; sourceTree = "<group>"; };
 		21F6DE1F2959A8260018AED5 /* Expenses Tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Expenses Tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		21F6DE3A2959A8F40018AED5 /* DataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DataModel.xcdatamodel; sourceTree = "<group>"; };
 		21F6DE522959E5E00018AED5 /* CustomCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomCell.swift; sourceTree = "<group>"; };
@@ -63,6 +75,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		21E5A6B7295B4EDA00CFAC92 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				21FDA147295AD7D30007CB70 /* NetworkingService.swift */,
+				21E5A6B5295B495A00CFAC92 /* CoreDataService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		21F6DE162959A8260018AED5 = {
 			isa = PBXGroup;
 			children = (
@@ -82,8 +103,8 @@
 		21F6DE212959A8260018AED5 /* Expenses Tracker */ = {
 			isa = PBXGroup;
 			children = (
+				21E5A6B7295B4EDA00CFAC92 /* Services */,
 				21F6DE382959A8970018AED5 /* MVC */,
-				21FDA147295AD7D30007CB70 /* NetworkingService.swift */,
 				21F6DE6F2959E6580018AED5 /* Application */,
 				21F6DE5A2959E62F0018AED5 /* Resources */,
 			);
@@ -93,21 +114,25 @@
 		21F6DE382959A8970018AED5 /* MVC */ = {
 			isa = PBXGroup;
 			children = (
-				21F6DE3C2959A93A0018AED5 /* Module */,
+				21F6DE3C2959A93A0018AED5 /* Model */,
 				21F6DE3E2959A9500018AED5 /* View */,
 				21F6DE3D2959A9450018AED5 /* Controllers */,
 			);
 			path = MVC;
 			sourceTree = "<group>";
 		};
-		21F6DE3C2959A93A0018AED5 /* Module */ = {
+		21F6DE3C2959A93A0018AED5 /* Model */ = {
 			isa = PBXGroup;
 			children = (
 				21F6DE392959A8F40018AED5 /* DataModel.xcdatamodeld */,
 				21202566295AC2A1000BEFAA /* TransacationData.swift */,
+				21E5A6B3295B47D700CFAC92 /* BitcoinData.swift */,
+				21E5A6B8295B4F2500CFAC92 /* Network.swift */,
+				21E5A6BA295B555B00CFAC92 /* Category.swift */,
+				21E5A6BC295B641B00CFAC92 /* AddedAmount.swift */,
 				21C955D0295B0FEC0044B92E /* DateContainer.swift */,
 			);
-			path = Module;
+			path = Model;
 			sourceTree = "<group>";
 		};
 		21F6DE3D2959A9450018AED5 /* Controllers */ = {
@@ -132,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				21F6DE5C2959E62F0018AED5 /* Montserrat Font Family */,
+				21E5A6BE295B743B00CFAC92 /* FontExtension.swift */,
 				21F6DE5B2959E62F0018AED5 /* NSObjectExtension.swift */,
 				21F6DE612959E62F0018AED5 /* Assets.xcassets */,
 				21F6DE622959E62F0018AED5 /* LaunchScreen.storyboard */,
@@ -236,14 +262,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21E5A6B4295B47D700CFAC92 /* BitcoinData.swift in Sources */,
 				21F6DE592959E6190018AED5 /* NewTransactionViewController.swift in Sources */,
+				21E5A6B9295B4F2500CFAC92 /* Network.swift in Sources */,
 				21C955CF295B0C9A0044B92E /* DateExtension.swift in Sources */,
+				21E5A6BD295B641B00CFAC92 /* AddedAmount.swift in Sources */,
 				21F6DE662959E62F0018AED5 /* NSObjectExtension.swift in Sources */,
+				21E5A6BF295B743B00CFAC92 /* FontExtension.swift in Sources */,
 				21F6DE532959E5E00018AED5 /* CustomCell.swift in Sources */,
 				21F6DE3B2959A8F40018AED5 /* DataModel.xcdatamodeld in Sources */,
 				21F6DE582959E6190018AED5 /* TransactionsViewController.swift in Sources */,
+				21E5A6B6295B495B00CFAC92 /* CoreDataService.swift in Sources */,
 				21F6DE732959E6580018AED5 /* SceneDelegate.swift in Sources */,
 				21202567295AC2A1000BEFAA /* TransacationData.swift in Sources */,
+				21E5A6BB295B555B00CFAC92 /* Category.swift in Sources */,
 				21C955D1295B0FEC0044B92E /* DateContainer.swift in Sources */,
 				21F6DE552959E6090018AED5 /* CustomPopUp.swift in Sources */,
 				21FDA148295AD7D30007CB70 /* NetworkingService.swift in Sources */,

@@ -3,39 +3,38 @@ import CoreData
 
 final class TransactionsViewController: UIViewController {
     
-    // MARK: - Properties
+    // MARK: - Constants, Texts
     
-    private let alert = CustomPopUp()
-    private var bitcoinValue: Double? = nil
-    let service = NetworkingService()
+    private enum Constants {
+        static let horizontalMargin: CGFloat = 20
+        static let tableViewTopAnchor: CGFloat = 290
+        static let historyLabelWidth: CGFloat = 140
+        static let balanceLabelHeight: CGFloat = 90
+        static let addButtonSize: CGFloat = 60
+    }
     
-    //MARK: - CoreData
-    
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    private enum Texts {
+        static let navigationBarTitle = "Balance:"
+        static let addTransactionButtonTitle = "Add transaction"
+        static let transactionHistoryLabel = "Transaction history"
+    }
     
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        DispatchQueue.global().async {
-            let value = self.service.fetchData()
-            DispatchQueue.main.async {
-                if let value = value {
-                    self.bitcoinValue = value
-                    self.bitcoinLabel.text = "Bitcoin:\n\(value)"
-                }
-            }
-        }
-        
-        let request : NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        do {
-            TransactionsData.transactions = try context.fetch(request)
-        } catch {
-            print("Error fetching data from context \(error)")
-        }
-        sumTheBalance()
+        updateBitcoinPrice() // Fetchs data and updates Bitcoin label
+        CoreDataService.makeRequestForTransactions() //Requests CoreData for transactions
+        calculateTheBalance() //Calculates the balance by iteration through all transactions
         setupView()
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        configureNavigationBar()
     }
     
     override func viewDidLayoutSubviews() {
@@ -44,12 +43,7 @@ final class TransactionsViewController: UIViewController {
         activateLayout()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-            configureNavBar()
-    }
-    
-    // MARK: - Layout
+    // MARK: - UI related methods
     
     private func setupView() {
         
@@ -57,17 +51,6 @@ final class TransactionsViewController: UIViewController {
         configureTableView()
         configureButtons()
         view.backgroundColor = .white
-    }
-
-    // MARK: - Private Methods
-    
-    private func configureButtons(){
-        addButton.addTarget(self, action: #selector(addButtonPressed), for: .touchUpInside)
-        addTransactionButton.addTarget(self, action: #selector(addTransaction), for: .touchUpInside)
-    }
-    
-    @objc private func addButtonPressed(){
-        alert.showAlert(on: self)
     }
     
     private func addSubviews(){
@@ -81,24 +64,26 @@ final class TransactionsViewController: UIViewController {
         transactionsTableView.dataSource = self
     }
     
-    private func configureNavBar(){
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.font: UIFont(name: "Montserrat-SemiBold", size: 25)!, NSAttributedString.Key.foregroundColor: UIColor.black]
+    private func configureButtons(){
+        addButton.addTarget(self, action: #selector(addButtonPressed), for: .touchUpInside)
+        addTransactionButton.addTarget(self, action: #selector(addTransaction), for: .touchUpInside)
+    }
+    
+    private func configureNavigationBar(){
+        navigationController?.navigationBar.titleTextAttributes = [
+            NSAttributedString.Key.font: UIFont.customFont(type: .semibold, size: 25),
+            NSAttributedString.Key.foregroundColor: UIColor.black]
         navigationController?.navigationBar.tintColor = .black
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.shadowImage = UIImage()
         
-        title = "Balance:"
-    }
-    
-    private func sumTheBalance(){
-        TransactionsData.currentBalance = 0
-        for transaction in TransactionsData.transactions {
-            TransactionsData.currentBalance = TransactionsData.currentBalance + Int(transaction.amount)
-        }
+        title = Texts.navigationBarTitle
     }
     
     private func designCell(index: Int, cell: CustomTableViewCell){
-        cell.backgroundColor = .white
+        if traitCollection.userInterfaceStyle == .dark {
+            cell.backgroundColor = .label
+        }
         cell.transactionAmountLabel.text = "\(TransactionsData.transactions[index].amount) $"
         cell.dateLabel.text = TransactionsData.transactions[index].date
         if let category = TransactionsData.transactions[index].category {
@@ -109,22 +94,26 @@ final class TransactionsViewController: UIViewController {
         cell.selectionStyle = .none
     }
     
+    func updateBalanceLabel(){
+        balanceLabel.text = " \(TransactionsData.currentBalance) $"
+    }
+    
     private func activateLayout(){
         NSLayoutConstraint.activate([
             
             transactionsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             transactionsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             transactionsTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            transactionsTableView.topAnchor.constraint(equalTo: view.topAnchor, constant: 290),
+            transactionsTableView.topAnchor.constraint(equalTo: view.topAnchor, constant: Constants.tableViewTopAnchor),
             
-            historyLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            historyLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Constants.horizontalMargin),
             historyLabel.heightAnchor.constraint(equalToConstant: 20),
             historyLabel.topAnchor.constraint(equalTo: addTransactionButton.bottomAnchor, constant: 5),
-            historyLabel.widthAnchor.constraint(equalToConstant: 140),
+            historyLabel.widthAnchor.constraint(equalToConstant: Constants.historyLabelWidth),
             
             balanceLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -100),
-            balanceLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            balanceLabel.heightAnchor.constraint(equalToConstant: 90),
+            balanceLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Constants.horizontalMargin),
+            balanceLabel.heightAnchor.constraint(equalToConstant: Constants.balanceLabelHeight),
             balanceLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 85),
             
             addTransactionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -132,16 +121,60 @@ final class TransactionsViewController: UIViewController {
             addTransactionButton.widthAnchor.constraint(equalToConstant: 200),
             addTransactionButton.topAnchor.constraint(equalTo: balanceLabel.bottomAnchor, constant: 15),
             
-            addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Constants.horizontalMargin),
             addButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
-            addButton.heightAnchor.constraint(equalToConstant: 60),
-            addButton.widthAnchor.constraint(equalToConstant: 60),
+            addButton.heightAnchor.constraint(equalToConstant: Constants.addButtonSize),
+            addButton.widthAnchor.constraint(equalToConstant: Constants.addButtonSize),
             
-            bitcoinLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            bitcoinLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Constants.horizontalMargin),
             bitcoinLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 40),
             bitcoinLabel.heightAnchor.constraint(equalToConstant: 40),
             bitcoinLabel.widthAnchor.constraint(equalToConstant: 80),
         ])
+    }
+    
+
+    // MARK: - Private Methods
+    
+    private func updateBitcoinPrice(){
+        DispatchQueue.global().async {
+            let value = NetworkingService.fetchData()
+            DispatchQueue.main.async {
+                if let value = value {
+                    BitcoinData.bitcoinValue = value
+                    self.bitcoinLabel.text = "Bitcoin:\n\(value)"
+                }
+            }
+        }
+    }
+    
+    private func calculateTheBalance(){
+        TransactionsData.currentBalance = 0
+        for transaction in TransactionsData.transactions {
+            TransactionsData.addToTheBalance(amount: Int(transaction.amount))
+        }
+    }
+    
+    private func removeFromBalance(index: Int){
+        let toRemove = TransactionsData.transactions[index].amount
+        TransactionsData.addToTheBalance(amount: -Int(toRemove))
+        updateBalanceLabel()
+    }
+    
+    // MARK: - @objc methods
+    
+    @objc private func addTransaction(){
+        let vc = NewTransactionViewController()
+        
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
+        vc.delegate = self
+        present(nav, animated: true, completion: nil)
+    }
+    
+    private let customPopUp = CustomPopUp()
+    @objc private func addButtonPressed(){
+        customPopUp.showPopUp(on: self)
     }
     
     // MARK: - UI Elements
@@ -150,12 +183,13 @@ final class TransactionsViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         
-        if let bitcoinValue = bitcoinValue {
+        if let bitcoinValue = BitcoinData.bitcoinValue {
             label.text = "Bitcoin:\n\(bitcoinValue)"
         } else {
             label.text = "Bitcoin:\nLoading..."
         }
-        label.font = UIFont(name: "Montserrat-Medium", size: 14)
+        label.font = UIFont.customFont(type: .medium, size: 14)
+        
         label.adjustsFontSizeToFitWidth = true
         label.textColor = .systemGray
         
@@ -171,8 +205,8 @@ final class TransactionsViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         
-        label.text = "Transactions history:"
-        label.font = UIFont(name: "Montserrat-Regular", size: 15)
+        label.text = Texts.transactionHistoryLabel
+        label.font = UIFont.customFont(type: .regular, size: 15)
         label.textColor = .systemGray
         label.adjustsFontSizeToFitWidth = true
         label.textAlignment = .center
@@ -186,8 +220,8 @@ final class TransactionsViewController: UIViewController {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        button.setTitle("Add transaction", for: .normal)
-        button.titleLabel?.font = UIFont(name: "Montserrat-Bold", size: 20)
+        button.setTitle(Texts.addTransactionButtonTitle, for: .normal)
+        button.titleLabel?.font = UIFont.customFont(type: .bold, size: 20)
 
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.adjustsFontSizeToFitWidth = true
@@ -216,7 +250,7 @@ final class TransactionsViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
 
         label.text = "\(TransactionsData.currentBalance) $"
-        label.font = UIFont(name: "Montserrat-Bold", size: 25)
+        label.font = .customFont(type: .bold, size: 25)
         label.textColor = .black
 
         label.backgroundColor = .systemBlue.withAlphaComponent(0.2)
@@ -232,61 +266,25 @@ final class TransactionsViewController: UIViewController {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        var config = UIButton.Configuration.filled()
-        config.image = UIImage(systemName: "plus",
+        var customConfiguration = UIButton.Configuration.filled()
+        customConfiguration.image = UIImage(systemName: "plus",
                                withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .bold))
-        config.cornerStyle = .capsule
-        button.configuration = config
+        customConfiguration.cornerStyle = .capsule
+        button.configuration = customConfiguration
         button.tintColor = .systemBlue
         
         return button
     }()
     
-    // MARK: - @objc methods
-    
-    @objc private func addTransaction(){
-        let vc = NewTransactionViewController()
-        
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .fullScreen
-        vc.delegate = self
-        present(nav, animated: true, completion: nil)
-    }
 }
+//MARK: -TableView Extension
 
 extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate{
-    
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
-        let index = TransactionsData.transactions.count - indexPath.row - 1
-        let toRemove = TransactionsData.transactions[index].amount
-        
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") {
-            (action, sourceView, completionHandler) in
-            TransactionsData.currentBalance = TransactionsData.currentBalance - Int(toRemove)
-            self.balanceLabel.text = "\(TransactionsData.currentBalance) $"
-            self.context.delete(TransactionsData.transactions[index])
-            TransactionsData.transactions.remove(at: index)
-            tableView.deleteRows(at: [indexPath], with: .fade)
-            do{
-                try self.context.save()
-            } catch {
-                print("Error with \(error)")
-            }
-            completionHandler(true)
-        }
-        deleteAction.image = UIImage(systemName: "trash")
-        
-        let swipeConfiguration = UISwipeActionsConfiguration(actions: [ deleteAction])
-        swipeConfiguration.performsFirstActionWithFullSwipe = false
-        return swipeConfiguration
-    }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return TransactionsData.transactions.count
     }
     
-
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let size = (view.frame.height - 290)/20
         return CGFloat(size)
@@ -295,7 +293,7 @@ extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(
             withIdentifier: CustomTableViewCell.identifier,
-            for: indexPath) as?     CustomTableViewCell
+            for: indexPath) as? CustomTableViewCell
         else {
             return UITableViewCell()
         }
@@ -303,10 +301,32 @@ extension TransactionsViewController: UITableViewDataSource, UITableViewDelegate
         designCell(index: index, cell: cell)
         return cell
     }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let index = TransactionsData.transactions.count - indexPath.row - 1
+        
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") {
+            (action, sourceView, completionHandler) in
+            
+            self.removeFromBalance(index: index)
+            CoreDataService.deleteTheTransaction(at: index)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            completionHandler(true)
+        }
+        
+        deleteAction.image = UIImage(systemName: "trash")
+        
+        let swipeConfiguration = UISwipeActionsConfiguration(actions: [deleteAction])
+        swipeConfiguration.performsFirstActionWithFullSwipe = false
+        return swipeConfiguration
+    }
 }
 
+//MARK: -Protocol Extensions
 extension TransactionsViewController: UpdateTableViewProtocol {
     func updateTableView() {
         transactionsTableView.reloadData()
+        updateBalanceLabel()
     }
 }
